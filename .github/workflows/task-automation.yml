@@ -1,0 +1,119 @@
+# NOTE: This workflow is intended to run only on the protected 'task-ops' branch.
+# Ensure only the maintainer can push to 'task-ops' via branch protection settings.
+# The workflow can be triggered manually (workflow_dispatch) or by push to 'task-ops'.
+
+name: Agile Task Automation (Maintainer Only)
+
+on:
+  push:
+    branches:
+      - task-ops
+  workflow_dispatch:
+    inputs:
+      title:
+        description: 'Issue title'
+        required: false
+      body:
+        description: 'Issue body/description'
+        required: false
+      assignee:
+        description: 'GitHub username to assign'
+        required: false
+      due_date:
+        description: 'Due date (YYYY-MM-DD)'
+        required: false
+      labels:
+        description: 'Labels (space separated)'
+        required: false
+      comment:
+        description: 'Optional comment'
+        required: false
+
+env:
+  TASK_BOT_TOKEN: ${{ secrets.TASK_BOT_TOKEN }}
+
+jobs:
+  generate-weekly-tasks:
+    name: Generate Weekly Tasks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install PyGithub python-dateutil
+    - name: Generate weekly tasks
+      run: |
+        python scripts/generate_tasks.py --token ${{ env.TASK_BOT_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }}
+
+  assign-tasks:
+    name: Assign Tasks to Interns
+    runs-on: ubuntu-latest
+    needs: [generate-weekly-tasks]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install PyGithub
+    - name: Assign tasks to interns
+      run: |
+        python scripts/assign_tasks.py --token ${{ env.TASK_BOT_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }}
+
+  create-sprint-board:
+    name: Create Sprint Board
+    runs-on: ubuntu-latest
+    needs: [assign-tasks]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    - name: Install dependencies
+      run: |
+        pip install PyGithub
+    - name: Create sprint board
+      run: |
+        python scripts/create_sprint_board.py --token ${{ env.TASK_BOT_TOKEN }}
+      env:
+        GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }}
+
+  generate-specific-task:
+    name: Generate Specific Task
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.title }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install PyGithub requests
+      - name: Generate specific task
+        run: |
+          python scripts/generate_specific_task.py \
+            --title "${{ github.event.inputs.title }}" \
+            --body "${{ github.event.inputs.body }}" \
+            --assignee "${{ github.event.inputs.assignee }}" \
+            ${{ github.event.inputs.due_date && format('--due-date {0}', github.event.inputs.due_date) || '' }} \
+            ${{ github.event.inputs.labels && format('--labels {0}', github.event.inputs.labels) || '' }} \
+            ${{ github.event.inputs.comment && format('--comment "{0}"', github.event.inputs.comment) || '' }} \
+            --token ${{ env.TASK_BOT_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }} 

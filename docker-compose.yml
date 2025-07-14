@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app
+      - FLASK_ENV=development
+    command: python -m http.server 8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  jupyter:
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./notebooks:/app/notebooks
+    environment:
+      - PYTHONPATH=/app
+      - JUPYTER_ENABLE_LAB=yes
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''
+    depends_on:
+      app:
+        condition: service_healthy
+
+  tests:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: pytest --cov=./ --cov-report=term-missing
+    depends_on:
+      app:
+        condition: service_healthy
+
+  lint:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: |
+      sh -c "
+        black --check --diff . &&
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics &&
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics &&
+        mypy . --ignore-missing-imports
+      "
+
+  security:
+    build: .
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: |
+      sh -c "
+        bandit -r . -f json -o bandit-report.json &&
+        safety check --json --output safety-report.json
+      "
+
+volumes:
+  data: 

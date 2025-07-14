@@ -1,0 +1,384 @@
+name: Enhanced CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/*, hotfix/*, intern/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: "3.11"
+  PIP_CACHE_DIR: ~/.cache/pip
+
+jobs:
+  # Quality Checks for All PRs
+  quality-check:
+    name: Quality Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.PIP_CACHE_DIR }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black mypy bandit safety pre-commit
+    
+    - name: Lint with flake8
+      run: |
+        echo "Running flake8 linting..."
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=88 --statistics
+    
+    - name: Check formatting with black
+      run: |
+        echo "Checking code formatting with Black..."
+        black --check --diff .
+    
+    - name: Type check with mypy
+      run: |
+        echo "Running type checking with MyPy..."
+        mypy . --ignore-missing-imports --show-error-codes
+    
+    - name: Security check with bandit
+      run: |
+        echo "Running security analysis with Bandit..."
+        bandit -r . -f json -o bandit-report.json || true
+        bandit -r . -f txt -o bandit-report.txt || true
+    
+    - name: Dependency security check
+      run: |
+        echo "Checking dependencies for security vulnerabilities..."
+        safety check --json --output safety-report.json || true
+        safety check --full-report --output safety-report.txt || true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports-${{ github.run_number }}
+        path: |
+          bandit-report.json
+          bandit-report.txt
+          safety-report.json
+          safety-report.txt
+        retention-days: 30
+
+  # Comprehensive Testing
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: [quality-check]
+    
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, "3.10", "3.11"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.PIP_CACHE_DIR }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-${{ matrix.python-version }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-html pytest-xdist
+    
+    - name: Run tests with pytest
+      run: |
+        echo "Running tests with Python ${{ matrix.python-version }}..."
+        pytest --cov=./ --cov-report=xml --cov-report=term-missing --cov-report=html --junitxml=test-results-${{ matrix.python-version }}.xml --html=test-report-${{ matrix.python-version }}.html
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.python-version }}-${{ github.run_number }}
+        path: |
+          test-results-${{ matrix.python-version }}.xml
+          test-report-${{ matrix.python-version }}.html
+          htmlcov/
+        retention-days: 30
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
+
+  # Student Submission Validation
+  student-submission-validation:
+    name: Student Submission Validation
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' && 
+      (contains(github.event.pull_request.title, 'student-submission') ||
+       contains(github.event.pull_request.title, 'Week') ||
+       contains(github.event.pull_request.title, 'Assignment') ||
+       contains(github.event.pull_request.title, 'Student'))
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.PIP_CACHE_DIR }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Validate submission structure
+      run: |
+        echo "Validating student submission structure..."
+        python scripts/check_submission.py
+    
+    - name: Run submission tests
+      run: |
+        echo "Running student submission tests..."
+        python scripts/test_submission.py
+    
+    - name: Generate automated feedback
+      run: |
+        echo "Generating automated feedback..."
+        python scripts/generate_feedback.py
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Comment feedback on PR
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          try {
+            const feedback = fs.readFileSync('feedback.md', 'utf8');
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: feedback
+            });
+            console.log('Feedback posted successfully');
+          } catch (error) {
+            console.log('No feedback file found or error posting feedback:', error.message);
+          }
+    
+    - name: Upload validation reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: student-validation-${{ github.run_number }}
+        path: |
+          feedback.md
+          validation-report.json
+          test-results/
+        retention-days: 30
+
+  # Build and Deploy (Only for develop and main)
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build Docker image
+      run: |
+        echo "Building Docker image..."
+        docker build -t generative-ai-course:${{ github.sha }} .
+        docker build -t generative-ai-course:latest .
+        docker build -t generative-ai-course:${{ github.ref_name }} .
+    
+    - name: Upload Docker image
+      uses: actions/upload-artifact@v3
+      with:
+        name: docker-image-${{ github.run_number }}
+        path: /tmp/docker-image.tar
+        retention-days: 30
+
+  # Deploy to Staging (develop branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to staging environment
+      run: |
+        echo "Deploying to staging environment..."
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        # Add your staging deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+        # Example: docker-compose -f docker-compose.staging.yml up -d
+    
+    - name: Run staging smoke tests
+      run: |
+        echo "Running staging smoke tests..."
+        # Add your staging test commands here
+        # Example: curl -f http://staging.example.com/health
+        # Example: pytest tests/smoke/ --base-url=http://staging.example.com
+    
+    - name: Notify staging deployment
+      run: |
+        echo "Staging deployment completed successfully!"
+        # Add notification commands (Slack, email, etc.)
+
+  # Deploy to Production (main branch)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        echo "Branch: ${{ github.ref_name }}"
+        echo "Commit: ${{ github.sha }}"
+        # Add your production deployment commands here
+        # Example: kubectl apply -f k8s/production/
+        # Example: docker-compose -f docker-compose.production.yml up -d
+    
+    - name: Run production smoke tests
+      run: |
+        echo "Running production smoke tests..."
+        # Add your production test commands here
+        # Example: curl -f https://example.com/health
+        # Example: pytest tests/smoke/ --base-url=https://example.com
+    
+    - name: Notify production deployment
+      run: |
+        echo "Production deployment completed successfully!"
+        # Add notification commands (Slack, email, etc.)
+
+  # Security Scan (Scheduled)
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety trivy-python-plugin
+    
+    - name: Run comprehensive security scan
+      run: |
+        echo "Running comprehensive security scan..."
+        bandit -r . -f json -o security-scan-bandit.json
+        safety check --json --output security-scan-safety.json
+        # Add more security tools as needed
+    
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-scan-${{ github.run_number }}
+        path: |
+          security-scan-*.json
+        retention-days: 90
+
+  # Dependency Update Check
+  dependency-check:
+    name: Dependency Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependency check tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety pip-audit
+    
+    - name: Check for outdated dependencies
+      run: |
+        echo "Checking for outdated dependencies..."
+        pip list --outdated --format=json > outdated-deps.json
+        safety check --json --output safety-deps.json
+    
+    - name: Create dependency report
+      run: |
+        echo "Creating dependency update report..."
+        python scripts/dependency_report.py
+    
+    - name: Upload dependency report
+      uses: actions/upload-artifact@v3
+      with:
+        name: dependency-report-${{ github.run_number }}
+        path: |
+          outdated-deps.json
+          safety-deps.json
+          dependency-report.md
+        retention-days: 30 
