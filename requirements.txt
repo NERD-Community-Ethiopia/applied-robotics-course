@@ -1,22 +1,15 @@
 # Core robotics dependencies
-rclpy>=3.3.7
-geometry_msgs
-std_msgs
-sensor_msgs
-nav_msgs
-visualization_msgs
-tf2_ros
-tf2_geometry_msgs
+
 
 # Robot simulation and visualization
-gazebo_msgs
-rviz2
-colcon-common-extensions
+# gazebo_msgs
+# rviz2
+# colcon-common-extensions
 
 # Computer vision and perception
 opencv-python>=4.5.0
 opencv-contrib-python>=4.5.0
-image_geometry
+# image_geometry
 cv_bridge
 
 # AI and machine learning (shared with AI course)
