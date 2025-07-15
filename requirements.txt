@@ -38,7 +38,7 @@ sympy>=1.9.0
 pyserial>=3.5
 RPi.GPIO>=0.7.1
 adafruit-circuitpython-motor>=3.3.0
-adafruit-circuitpython-servo>=1.15.0
+# adafruit-circuitpython-servo>=1.15.0 # keeps getting error
 
 # Path planning and navigation
 networkx>=2.6.0
