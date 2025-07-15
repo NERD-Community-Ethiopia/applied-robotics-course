@@ -48,7 +48,7 @@ jobs:
           pip install PyGithub python-dateutil
       - name: Generate weekly tasks
         run: |
-          python scripts/generate_tasks.py --token ${{ env.TASK_BOT_TOKEN }}
+          python scripts/generate_tasks.py --week 0 --token ${{ env.TASK_BOT_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }}
 
