@@ -1,6 +1,6 @@
 # Student Submission Protocol - Applied Robotics Course
 
-## 📋 Submission Guidelines
+## 🤖 Submission Guidelines
 
 ### 1. Repository Setup
 - Fork the main course repository
@@ -65,7 +65,7 @@ Every submission must include a comprehensive README.md with:
 - **Dependencies**: ROS2 packages and Python libraries
 - **Results**: Videos, images, or data from robot testing
 - **Challenges**: Difficulties encountered and solutions
-- **AI Integration**: How you applied AI course concepts
+- **AI Integration (if any)**: How you applied AI concepts to robotics (e.g., perception, planning)
 - **Learning Outcomes**: What you learned from this assignment
 
 #### 4.2 Source Code Files
@@ -92,7 +92,7 @@ src/your_robot_package/
 ├── __init__.py
 ├── robot_controller.py          # Main robot control logic
 ├── sensor_processing.py         # Sensor data handling
-├── ai_integration.py           # AI model integration
+├── ai_integration.py           # AI model integration (optional)
 ├── safety_monitor.py           # Emergency stop and safety
 └── utils/
     ├── __init__.py
@@ -141,7 +141,7 @@ robot_controller:
     control_frequency: 10.0
     safety_timeout: 5.0
     
-    # AI integration parameters
+    # AI integration parameters (optional)
     ai_model_path: "/path/to/model"
     confidence_threshold: 0.7
     
@@ -211,7 +211,7 @@ git push origin main
    - Brief summary of robot functionality
    - Key achievements
    - Challenges overcome
-   - AI integration details
+   - AI integration details (if any)
    - Links to demonstration videos
 
 ### 8. Grading Criteria
@@ -223,8 +223,8 @@ git push origin main
 - **Safety**: Appropriate safety measures implemented
 - **Testing**: Thorough testing in simulation and/or hardware
 
-#### 8.2 AI Integration (30%)
-- **Concept Application**: Effective use of AI course concepts
+#### 8.2 AI Integration (up to 30%, if applicable)
+- **Concept Application**: Effective use of AI concepts in robotics
 - **Innovation**: Creative integration of AI with robotics
 - **Performance**: AI enhances robot capabilities
 - **Documentation**: Clear explanation of AI integration
@@ -297,4 +297,4 @@ git push origin main
 
 ---
 
-**Remember: This robotics course is designed to complement your AI learning. Every assignment should demonstrate how AI concepts can enhance robot capabilities. Focus on practical applications and real-world problem-solving!** 
+**Remember: This course is designed to give you hands-on experience in robotics. Every assignment should demonstrate your understanding of robotics concepts and practical problem-solving. If you use AI, show how it enhances your robot's capabilities, but focus on robust, safe, and effective robot design!** 

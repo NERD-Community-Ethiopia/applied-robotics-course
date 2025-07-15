@@ -20,7 +20,7 @@ except ImportError:
 
 
 class SprintBoardCreator:
-    def __init__(self, token: str, repo_name: str = "NERD-Community-Ethiopia/generative-ai-course"):
+    def __init__(self, token: str, repo_name: str = "NERD-Community-Ethiopia/applied-robotics-course"):
         self.github = Github(token)
         self.repo = self.github.get_repo(repo_name)
         self.organization = self.github.get_organization("NERD-Community-Ethiopia")
@@ -131,7 +131,7 @@ class SprintBoardCreator:
 def main():
     parser = argparse.ArgumentParser(description="Create GitHub Projects sprint boards")
     parser.add_argument("--token", required=True, help="GitHub token")
-    parser.add_argument("--repo", default="NERD-Community-Ethiopia/generative-ai-course",
+    parser.add_argument("--repo", default="NERD-Community-Ethiopia/applied-robotics-course",
                        help="Repository name (owner/repo)")
     parser.add_argument("--sprint-name", help="Name of the sprint")
     parser.add_argument("--start-date", help="Sprint start date (YYYY-MM-DD)")

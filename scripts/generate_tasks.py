@@ -21,7 +21,7 @@ except ImportError:
 
 
 class TaskGenerator:
-    def __init__(self, token: str, repo_name: str = "NERD-Community-Ethiopia/generative-ai-course"):
+    def __init__(self, token: str, repo_name: str = "NERD-Community-Ethiopia/applied-robotics-course"):
         self.github = Github(token)
         self.repo = self.github.get_repo(repo_name)
         self.week_templates = self._load_week_templates()
@@ -148,7 +148,7 @@ class TaskGenerator:
             due_date = datetime.now() + timedelta(weeks=int(week))
             milestone = self.repo.create_milestone(
                 title=milestone_title,
-                description=f"Tasks for Week {week} of the Generative AI Course",
+                description=f"Tasks for Week {week} of the Applied Robotics course",
                 due_on=due_date
             )
             print(f"Created milestone: {milestone_title}")
@@ -238,7 +238,7 @@ def main():
     parser.add_argument("--type", default="all", choices=["all", "lecture", "workshop", "assignment", "documentation"],
                        help="Type of tasks to generate")
     parser.add_argument("--token", required=True, help="GitHub token")
-    parser.add_argument("--repo", default="NERD-Community-Ethiopia/generative-ai-course",
+    parser.add_argument("--repo", default="NERD-Community-Ethiopia/applied-robotics-course",
                        help="Repository name (owner/repo)")
     
     args = parser.parse_args()
