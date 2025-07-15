@@ -76,7 +76,7 @@ kubernetes>=24.0.0
 prometheus-client>=0.14.0
 grafana-api>=1.0.0
 # rosbag2-py
-rqt-py-common
+# rqt-py-common
 
 # Security
 cryptography>=3.4.8
