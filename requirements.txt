@@ -75,7 +75,7 @@ kubernetes>=24.0.0
 # Monitoring and logging
 prometheus-client>=0.14.0
 grafana-api>=1.0.0
-rosbag2-py
+# rosbag2-py
 rqt-py-common
 
 # Security
