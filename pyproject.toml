@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "generative-ai-course"
+name = "applied-robotics-course"
 version = "1.0.0"
-description = "A comprehensive course on Generative AI and Automation"
+description = "A comprehensive course on Applied Robotics, including hardware integration, simulation, real-time systems, and AI-powered robotic applications."
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
@@ -77,7 +77,7 @@ notebooks = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/NERD-Community-Ethiopia/generative-ai-course"
+Homepage = "https://github.com/NERD-Community-Ethiopia/applied-robotics-course"
 Documentation = "https://github.com/NERD-Community-Ethiopia/generative-ai-course/wiki"
 Repository = "https://github.com/NERD-Community-Ethiopia/generative-ai-course.git"
 Issues = "https://github.com/NERD-Community-Ethiopia/generative-ai-course/issues"
