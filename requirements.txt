@@ -114,7 +114,7 @@ pyntcloud>=0.3.0
 # Audio processing (for speech-enabled robots)
 sounddevice>=0.4.0
 librosa>=0.9.0
-speech-recognition>=3.8.0
+# speech-recognition>=3.8.0
 pydub>=0.25.0
 
 # Misc utilities
