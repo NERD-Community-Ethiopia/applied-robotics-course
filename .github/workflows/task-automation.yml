@@ -28,10 +28,6 @@ on:
       comment:
         description: "Optional comment"
         required: false
-      week_number:
-        description: "Week number for task generation"
-        required: true
-        default: "1"
 
 env:
   TASK_BOT_TOKEN: ${{ secrets.TASK_BOT_TOKEN }}
@@ -52,9 +48,7 @@ jobs:
           pip install PyGithub python-dateutil
       - name: Generate weekly tasks
         run: |
-          python scripts/generate_tasks.py \
-            --week ${{ github.event.inputs.week_number || '1' }} \
-            --token ${{ env.GITHUB_TOKEN }}
+          python scripts/generate_tasks.py --token ${{ env.TASK_BOT_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ env.TASK_BOT_TOKEN }}
 
