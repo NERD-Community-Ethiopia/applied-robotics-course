@@ -28,32 +28,6 @@ class TaskAssigner:
     def _load_interns(self) -> Dict:
         """Load intern information and preferences"""
         return {
-<<<<<<< HEAD
-            "intern1": {
-                "username": "Biruk7479",  # Replace with actual usernames
-                "name": "Intern One",
-                "skills": ["python", "ai", "lectures"],
-                "preferences": ["lecture", "documentation"],
-                "max_tasks": 5,
-                "current_tasks": 0
-            },
-            "intern2": {
-                "username": "Hayat373",  # Replace with actual usernames
-                "name": "Intern Two",
-                "skills": ["python", "workshops", "testing"],
-                "preferences": ["workshop", "assignment"],
-                "max_tasks": 5,
-                "current_tasks": 0
-            },
-            "intern3": {
-                "username": "Soyiaz",  # Replace with actual usernames
-                "name": "Intern Three",
-                "skills": ["python", "ci-cd", "security"],
-                "preferences": ["documentation", "enhancement"],
-                "max_tasks": 5,
-                "current_tasks": 0
-            }
-=======
         "intern1": {
             "username": "Hayat373",  # Replace with actual GitHub usernames
             "name": "Hayat",
@@ -86,7 +60,6 @@ class TaskAssigner:
             "max_tasks": 3,
             "current_tasks": 0
         }
->>>>>>> 9a809122d4ebc3c1b8906a9af8f56e1705b99fde
         }
     
     def get_unassigned_issues(self) -> List:
